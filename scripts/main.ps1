@@ -17,26 +17,38 @@ LogGroup 'List TestResults files' {
 $testResults = [System.Collections.Generic.List[psobject]]::new()
 foreach ($file in $files) {
     $fileName = $file.BaseName
-    LogGroup $fileName {
-        $content = Get-Content -Path $file
-        $content | Out-String
-    }
-    LogGroup "$fileName - Summary" {
-        $object = $content | ConvertFrom-Json
-        $object | Format-Table | Out-String
-        $testResults.Add($object)
+    $content = Get-Content -Path $file
+    $object = $content | ConvertFrom-Json
+    $testResults.Add($object)
+
+    # LogGroup $fileName {
+    #     $content | Out-String
+    # }
+
+    LogGroup "$fileName" {
+        $result = [pscustomobject]@{
+            Tests        = [int]([math]::Round(($object | Measure-Object -Sum -Property TotalCount).Sum))
+            Passed       = [int]([math]::Round(($object | Measure-Object -Sum -Property PassedCount).Sum))
+            Failed       = [int]([math]::Round(($object | Measure-Object -Sum -Property FailedCount).Sum))
+            NotRun       = [int]([math]::Round(($object | Measure-Object -Sum -Property NotRunCount).Sum))
+            Inconclusive = [int]([math]::Round(($object | Measure-Object -Sum -Property InconclusiveCount).Sum))
+            Skipped      = [int]([math]::Round(($object | Measure-Object -Sum -Property SkippedCount).Sum))
+        }
+        $result | Format-Table | Out-String
     }
 }
 
-$total = [pscustomobject]@{
-    Tests        = [int]([math]::Round(($testResults | Measure-Object -Sum -Property TotalCount).Sum))
-    Passed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property PassedCount).Sum))
-    Failed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property FailedCount).Sum))
-    NotRun       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property NotRunCount).Sum))
-    Inconclusive = [int]([math]::Round(($testResults | Measure-Object -Sum -Property InconclusiveCount).Sum))
-    Skipped      = [int]([math]::Round(($testResults | Measure-Object -Sum -Property SkippedCount).Sum))
+LogGroup 'TestResult - Summary' {
+    $total = [pscustomobject]@{
+        Tests        = [int]([math]::Round(($testResults | Measure-Object -Sum -Property TotalCount).Sum))
+        Passed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property PassedCount).Sum))
+        Failed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property FailedCount).Sum))
+        NotRun       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property NotRunCount).Sum))
+        Inconclusive = [int]([math]::Round(($testResults | Measure-Object -Sum -Property InconclusiveCount).Sum))
+        Skipped      = [int]([math]::Round(($testResults | Measure-Object -Sum -Property SkippedCount).Sum))
+    }
+    $total | Format-Table | Out-String
 }
-$total | Format-Table | Out-String
 
 $totalErrors = 0
 if ($total.Failed -gt 0) {
