@@ -60,11 +60,11 @@ foreach ($file in $files) {
 
 [pscustomobject]@{
     TotalTests        = $allCases.Count
-    TotalErrors       = $testResults | Measure-Object -Sum -Property Errors
-    TotalFailures     = $testResults | Measure-Object -Sum -Property Failures
-    TotalNotRun       = $testResults | Measure-Object -Sum -Property NotRun
-    TotalInconclusive = $testResults | Measure-Object -Sum -Property Inconclusive
-    TotalIgnored      = $testResults | Measure-Object -Sum -Property Ignored
-    TotalSkipped      = $testResults | Measure-Object -Sum -Property Skipped
-    TotalInvalid      = $testResults | Measure-Object -Sum -Property Invalid
-}
+    TotalErrors       = ($testResults | Measure-Object -Sum -Property Errors).Sum
+    TotalFailures     = ($testResults | Measure-Object -Sum -Property Failures).Sum
+    TotalNotRun       = ($testResults | Measure-Object -Sum -Property NotRun).Sum
+    TotalInconclusive = ($testResults | Measure-Object -Sum -Property Inconclusive).Sum
+    TotalIgnored      = ($testResults | Measure-Object -Sum -Property Ignored).Sum
+    TotalSkipped      = ($testResults | Measure-Object -Sum -Property Skipped).Sum
+    TotalInvalid      = ($testResults | Measure-Object -Sum -Property Invalid).Sum
+} | Format-List | Out-String
