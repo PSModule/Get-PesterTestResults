@@ -32,20 +32,23 @@ foreach ($file in $files) {
     $failed = ($result.Failed -gt 0) -or ($result.NotRun -gt 0) -or ($result.Inconclusive -gt 0)
     $color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
     $reset = $PSStyle.Reset
-    LogGroup "$color$fileName$reset" {
+    LogGroup " - $color$fileName$reset" {
         $result | Format-Table | Out-String
     }
 }
-
-LogGroup 'TestResult - Summary' {
-    $total = [pscustomobject]@{
-        Tests        = [int]([math]::Round(($testResults | Measure-Object -Sum -Property TotalCount).Sum))
-        Passed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property PassedCount).Sum))
-        Failed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property FailedCount).Sum))
-        NotRun       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property NotRunCount).Sum))
-        Inconclusive = [int]([math]::Round(($testResults | Measure-Object -Sum -Property InconclusiveCount).Sum))
-        Skipped      = [int]([math]::Round(($testResults | Measure-Object -Sum -Property SkippedCount).Sum))
-    }
+Write-Output ('─' * 80)
+$total = [pscustomobject]@{
+    Tests        = [int]([math]::Round(($testResults | Measure-Object -Sum -Property TotalCount).Sum))
+    Passed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property PassedCount).Sum))
+    Failed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property FailedCount).Sum))
+    NotRun       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property NotRunCount).Sum))
+    Inconclusive = [int]([math]::Round(($testResults | Measure-Object -Sum -Property InconclusiveCount).Sum))
+    Skipped      = [int]([math]::Round(($testResults | Measure-Object -Sum -Property SkippedCount).Sum))
+}
+$failed = ($result.Failed -gt 0) -or ($result.NotRun -gt 0) -or ($result.Inconclusive -gt 0)
+$color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
+$reset = $PSStyle.Reset
+LogGroup " - $color`TestResult - Summary$reset" {
     $total | Format-Table | Out-String
 }
 
