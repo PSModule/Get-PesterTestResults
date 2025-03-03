@@ -28,5 +28,4 @@ jobs:
       - name: Action-Test
         uses: ./
         with:
-          working-directory: ./tests
-          subject: PSModule
+          WorkingDirectory: ./tests
