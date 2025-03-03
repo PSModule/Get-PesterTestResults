@@ -36,7 +36,7 @@ foreach ($file in $files) {
             }
         }
         $cases | ForEach-Object { $allCases.Add($_) }
-        $cases | Format-List | Out-String
+        $cases | Format-Table | Out-String
     }
     LogGroup "$fileName - Summary" {
         $testResultXml = $xmlDoc.'test-results'
@@ -54,17 +54,37 @@ foreach ($file in $files) {
             Time         = $testResultXml.time
         }
         $testResults.Add($testResult)
-        $testResult | Format-List | Out-String
+        $testResult | Format-Table | Out-String
     }
 }
 
-[pscustomobject]@{
-    TotalTests        = $allCases.Count
-    TotalErrors       = ($testResults | Measure-Object -Sum -Property Errors).Sum
-    TotalFailures     = ($testResults | Measure-Object -Sum -Property Failures).Sum
-    TotalNotRun       = ($testResults | Measure-Object -Sum -Property NotRun).Sum
-    TotalInconclusive = ($testResults | Measure-Object -Sum -Property Inconclusive).Sum
-    TotalIgnored      = ($testResults | Measure-Object -Sum -Property Ignored).Sum
-    TotalSkipped      = ($testResults | Measure-Object -Sum -Property Skipped).Sum
-    TotalInvalid      = ($testResults | Measure-Object -Sum -Property Invalid).Sum
+$total = [pscustomobject]@{
+    Tests        = $allCases.Count
+    Errors       = [math]::Round(($testResults | Measure-Object -Sum -Property Errors).Sum)
+    Failures     = [math]::Round(($testResults | Measure-Object -Sum -Property Failures).Sum)
+    NotRun       = [math]::Round(($testResults | Measure-Object -Sum -Property NotRun).Sum)
+    Inconclusive = [math]::Round(($testResults | Measure-Object -Sum -Property Inconclusive).Sum)
+    Ignored      = [math]::Round(($testResults | Measure-Object -Sum -Property Ignored).Sum)
+    Skipped      = [math]::Round(($testResults | Measure-Object -Sum -Property Skipped).Sum)
+    Invalid      = [math]::Round(($testResults | Measure-Object -Sum -Property Invalid).Sum)
 } | Format-Table | Out-String
+
+if ($total.Failures -gt 0) {
+    Write-GitHubError "There are $($total.Failures) failed tests of $($total.Tests) tests"
+    return $_.Failures
+}
+
+if ($total.Errors -gt 0) {
+    Write-GitHubError "There are $($total.Errors) test errors of $($total.Tests) tests"
+    return $_.Errors
+}
+
+if ($total.Invalid -gt 0) {
+    Write-GitHubError "There are $($total.Invalid) invalid test of $($total.Tests) tests"
+    return $_.Invalid
+}
+
+if ($total.NotRun -gt 0) {
+    Write-GitHubError "There are $($total.NotRun) test not run of $($total.Tests) tests"
+    return $_.NotRun
+}
