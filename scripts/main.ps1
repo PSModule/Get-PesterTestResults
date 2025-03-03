@@ -10,7 +10,7 @@ $testResultsFolder = New-Item -Path . -ItemType Directory -Name 'TestResults' -F
 gh run download $runId --repo $repo --pattern *-TestResults --dir TestResults
 $files = Get-ChildItem -Path $testResultsFolder -Recurse -File -Filter *.json | Sort-Object Name
 
-LogGroup 'List TestResults files' {
+LogGroup 'List files' {
     $files.Name | Out-String
 }
 
@@ -32,11 +32,12 @@ foreach ($file in $files) {
     $failed = ($result.Failed -gt 0) -or ($result.NotRun -gt 0) -or ($result.Inconclusive -gt 0)
     $color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
     $reset = $PSStyle.Reset
-    LogGroup " - $color$fileName$reset" {
+    $logGroupName = $fileName.Replace('-TestResult-Report', '')
+    LogGroup " - $color$logGroupName$reset" {
         $result | Format-Table | Out-String
     }
 }
-Write-Output ('─' * 80)
+Write-Output ('─' * 50)
 $total = [pscustomobject]@{
     Tests        = [int]([math]::Round(($testResults | Measure-Object -Sum -Property TotalCount).Sum))
     Passed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property PassedCount).Sum))
@@ -48,7 +49,7 @@ $total = [pscustomobject]@{
 $failed = ($result.Failed -gt 0) -or ($result.NotRun -gt 0) -or ($result.Inconclusive -gt 0)
 $color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
 $reset = $PSStyle.Reset
-LogGroup " - $color`TestResult - Summary$reset" {
+LogGroup " - $color`Summary$reset" {
     $total | Format-Table | Out-String
 }
 
