@@ -62,7 +62,7 @@ foreach ($file in $files) {
     TotalTests        = $allCases.Count
     TotalErrors       = $testResults | Measure-Object -Sum -Property Errors
     TotalFailures     = $testResults | Measure-Object -Sum -Property Failures
-    TotalNotRun       = $testResults | Measure-Object -Sum -Property 'NotRun'
+    TotalNotRun       = $testResults | Measure-Object -Sum -Property NotRun
     TotalInconclusive = $testResults | Measure-Object -Sum -Property Inconclusive
     TotalIgnored      = $testResults | Measure-Object -Sum -Property Ignored
     TotalSkipped      = $testResults | Measure-Object -Sum -Property Skipped
