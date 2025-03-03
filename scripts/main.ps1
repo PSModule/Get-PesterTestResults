@@ -67,4 +67,4 @@ foreach ($file in $files) {
     TotalIgnored      = ($testResults | Measure-Object -Sum -Property Ignored).Sum
     TotalSkipped      = ($testResults | Measure-Object -Sum -Property Skipped).Sum
     TotalInvalid      = ($testResults | Measure-Object -Sum -Property Invalid).Sum
-} | Format-List | Out-String
+} | Format-Table | Out-String
