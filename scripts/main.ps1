@@ -6,8 +6,9 @@ param()
 $PSStyle.OutputRendering = 'Ansi'
 $repo = $env:GITHUB_REPOSITORY
 $runId = $env:GITHUB_RUN_ID
-gh run download $runId --repo $repo --pattern *-TestResults
-$files = Get-ChildItem -Path . -Recurse -File
+$testResultsFolder = New-Item -Path . -ItemType Directory -Name 'TestResults' -Force
+gh run download $runId --repo $repo --pattern *-TestResults --dir TestResults
+$files = Get-ChildItem -Path $testResultsFolder -Recurse -File
 
 LogGroup 'List TestResults files' {
     $files.Name | Out-String
