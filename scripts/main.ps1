@@ -1,10 +1,7 @@
 #Requires -Modules GitHub
 
 [CmdletBinding()]
-param(
-    [Parameter()]
-    [string] $Subject = $env:<ORG_NAME>_<REPO_NAME>_INPUT_subject
-)
+param()
 
 begin {
     $scriptName = $MyInvocation.MyCommand.Name
