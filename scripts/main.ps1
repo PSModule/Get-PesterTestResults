@@ -67,7 +67,8 @@ $total = [pscustomobject]@{
     Ignored      = [math]::Round(($testResults | Measure-Object -Sum -Property Ignored).Sum)
     Skipped      = [math]::Round(($testResults | Measure-Object -Sum -Property Skipped).Sum)
     Invalid      = [math]::Round(($testResults | Measure-Object -Sum -Property Invalid).Sum)
-} | Format-Table | Out-String
+}
+$total | Format-Table | Out-String
 
 if ($total.Failures -gt 0) {
     Write-GitHubError "There are $($total.Failures) failed tests of $($total.Tests) tests"
