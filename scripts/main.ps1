@@ -15,6 +15,8 @@ LogGroup 'List files' {
 }
 
 $testResults = [System.Collections.Generic.List[psobject]]::new()
+$failedTests = [System.Collections.Generic.List[psobject]]::new()
+$unexecutedTests = [System.Collections.Generic.List[psobject]]::new()
 $totalErrors = 0
 
 foreach ($file in $files) {
@@ -32,7 +34,12 @@ foreach ($file in $files) {
         Skipped      = [int]([math]::Round(($object | Measure-Object -Sum -Property SkippedCount).Sum))
     }
 
-    $failed = ($result.Failed -gt 0) -or ($result.NotRun -gt 0) -or ($result.Inconclusive -gt 0) -or ($object.Result -eq 'Failed') -or ($object.Executed -eq $false)
+    $failed = (
+        $result.Failed -gt 0 -or
+        $result.NotRun -gt 0 -or
+        $result.Inconclusive -gt 0 -or
+        $object.Result -eq 'Failed' -or $object.Executed -eq $false
+    )
     $color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
     $reset = $PSStyle.Reset
     $logGroupName = $fileName.Replace('-TestResult-Report', '')
@@ -40,11 +47,13 @@ foreach ($file in $files) {
         $result | Format-Table | Out-String
 
         if ($object.Result -eq 'Failed') {
+            $failedTests.Add($file)
             Write-GitHubError "Test result explicitly marked as Failed in file: $($file.Name)"
             $totalErrors++
         }
 
         if ($object.Executed -eq $false) {
+            $unexecutedTests.Add($file)
             Write-GitHubError "Test was not executed as reported in file: $($file.Name)"
             $totalErrors++
         }
@@ -65,8 +74,7 @@ $failed = (
     $total.Failed -gt 0 -or
     $total.NotRun -gt 0 -or
     $total.Inconclusive -gt 0 -or
-    $object.Executed -eq $false -or
-    $object.Result -eq 'Failed'
+    $totalErrors -gt 0
 )
 $color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
 $reset = $PSStyle.Reset
@@ -87,6 +95,18 @@ if ($total.NotRun -gt 0) {
 if ($total.Inconclusive -gt 0) {
     Write-GitHubError "There are $($total.Inconclusive) inconclusive tests of $($total.Tests) tests"
     $totalErrors += $total.Inconclusive
+}
+
+if ($failedTests.Count -gt 0) {
+    LogGroup 'Failed Test Files' {
+        $failedTests.Name | Out-String
+    }
+}
+
+if ($unexecutedTests.Count -gt 0) {
+    LogGroup 'Unexecuted Test Files' {
+        $unexecutedTests.Name | Out-String
+    }
 }
 
 exit $totalErrors
