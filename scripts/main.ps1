@@ -61,7 +61,13 @@ $total = [pscustomobject]@{
     Skipped      = [int]([math]::Round(($testResults | Measure-Object -Sum -Property SkippedCount).Sum))
 }
 
-$failed = ($total.Failed -gt 0) -or ($total.NotRun -gt 0) -or ($total.Inconclusive -gt 0)
+$failed = (
+    $total.Failed -gt 0 -or
+    $total.NotRun -gt 0 -or
+    $total.Inconclusive -gt 0 -or
+    $object.Executed -eq $false -or
+    $object.Result -eq 'Failed'
+)
 $color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
 $reset = $PSStyle.Reset
 LogGroup " - $color`Summary$reset" {
