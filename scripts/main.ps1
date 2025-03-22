@@ -44,6 +44,7 @@ foreach ($file in $files) {
     $reset = $PSStyle.Reset
     $logGroupName = $fileName.Replace('-TestResult-Report', '')
     LogGroup " - $color$logGroupName$reset" {
+        $object | Format-List | Out-String
         if ($object.Executed -eq $false) {
             $unexecutedTests.Add($file)
             Write-GitHubError "Test was not executed as reported in file: $($file.Name)"
@@ -55,7 +56,6 @@ foreach ($file in $files) {
                 $totalErrors++
             }
             $result | Format-Table | Out-String
-            $object | Format-Table | Out-String
         }
     }
 }
