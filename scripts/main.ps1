@@ -80,31 +80,30 @@ $color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
 $reset = $PSStyle.Reset
 LogGroup " - $color`Summary$reset" {
     $total | Format-Table | Out-String
-}
+    if ($total.Failed -gt 0) {
+        Write-GitHubError "There are $($total.Failed) failed tests of $($total.Tests) tests"
+        $totalErrors += $total.Failed
+    }
 
-if ($total.Failed -gt 0) {
-    Write-GitHubError "There are $($total.Failed) failed tests of $($total.Tests) tests"
-    $totalErrors += $total.Failed
-}
+    if ($total.NotRun -gt 0) {
+        Write-GitHubError "There are $($total.NotRun) tests not run of $($total.Tests) tests"
+        $totalErrors += $total.NotRun
+    }
 
-if ($total.NotRun -gt 0) {
-    Write-GitHubError "There are $($total.NotRun) tests not run of $($total.Tests) tests"
-    $totalErrors += $total.NotRun
-}
+    if ($total.Inconclusive -gt 0) {
+        Write-GitHubError "There are $($total.Inconclusive) inconclusive tests of $($total.Tests) tests"
+        $totalErrors += $total.Inconclusive
+    }
 
-if ($total.Inconclusive -gt 0) {
-    Write-GitHubError "There are $($total.Inconclusive) inconclusive tests of $($total.Tests) tests"
-    $totalErrors += $total.Inconclusive
-}
+    if ($failedTests.Count -gt 0) {
+        Write-Host 'Failed Test Files'
+        $failedTests.Name | ForEach-Object { Write-Host " - $_" }
+    }
 
-if ($failedTests.Count -gt 0) {
-    Write-Host 'Failed Test Files'
-    $failedTests.Name | ForEach-Object { Write-Host " - $_" }
-}
-
-if ($unexecutedTests.Count -gt 0) {
-    Write-Host 'Unexecuted Test Files'
-    $unexecutedTests.Name | ForEach-Object { Write-Host " - $_" }
+    if ($unexecutedTests.Count -gt 0) {
+        Write-Host 'Unexecuted Test Files'
+        $unexecutedTests.Name | ForEach-Object { Write-Host " - $_" }
+    }
 }
 
 exit $totalErrors
