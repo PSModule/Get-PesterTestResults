@@ -37,6 +37,7 @@ runs:
         Verbose: ${{ inputs.Verbose }}
         Version: ${{ inputs.Version }}
         WorkingDirectory: ${{ inputs.WorkingDirectory }}
+        ShowInfo: false
         Script: |
           # Get-PesterTestResults
           ${{ github.action_path }}/scripts/main.ps1
