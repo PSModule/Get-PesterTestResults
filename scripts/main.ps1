@@ -98,15 +98,13 @@ if ($total.Inconclusive -gt 0) {
 }
 
 if ($failedTests.Count -gt 0) {
-    LogGroup 'Failed Test Files' {
-        $failedTests.Name | Out-String
-    }
+    Write-Host 'Failed Test Files'
+    $failedTests.Name | Out-String
 }
 
 if ($unexecutedTests.Count -gt 0) {
-    LogGroup 'Unexecuted Test Files' {
-        $unexecutedTests.Name | Out-String
-    }
+    Write-Host 'Unexecuted Test Files'
+    $unexecutedTests.Name | Out-String
 }
 
 exit $totalErrors
