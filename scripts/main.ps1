@@ -99,12 +99,12 @@ if ($total.Inconclusive -gt 0) {
 
 if ($failedTests.Count -gt 0) {
     Write-Host 'Failed Test Files'
-    $failedTests.Name | Out-String
+    $failedTests.Name | ForEach-Object { Write-Host " - $_" }
 }
 
 if ($unexecutedTests.Count -gt 0) {
     Write-Host 'Unexecuted Test Files'
-    $unexecutedTests.Name | Out-String
+    $unexecutedTests.Name | ForEach-Object { Write-Host " - $_" }
 }
 
 exit $totalErrors
