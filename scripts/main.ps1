@@ -38,16 +38,16 @@ foreach ($file in $files) {
     $logGroupName = $fileName.Replace('-TestResult-Report', '')
     LogGroup " - $color$logGroupName$reset" {
         $result | Format-Table | Out-String
-    }
 
-    if ($object.Result -eq 'Failed') {
-        Write-GitHubError "Test result explicitly marked as Failed in file: $($file.Name)"
-        $totalErrors++
-    }
+        if ($object.Result -eq 'Failed') {
+            Write-GitHubError "Test result explicitly marked as Failed in file: $($file.Name)"
+            $totalErrors++
+        }
 
-    if ($object.Executed -eq $false) {
-        Write-GitHubError "Test was not executed as reported in file: $($file.Name)"
-        $totalErrors++
+        if ($object.Executed -eq $false) {
+            Write-GitHubError "Test was not executed as reported in file: $($file.Name)"
+            $totalErrors++
+        }
     }
 }
 
