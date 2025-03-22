@@ -44,18 +44,18 @@ foreach ($file in $files) {
     $reset = $PSStyle.Reset
     $logGroupName = $fileName.Replace('-TestResult-Report', '')
     LogGroup " - $color$logGroupName$reset" {
-        $result | Format-Table | Out-String
-
-        if ($object.Result -eq 'Failed') {
-            $failedTests.Add($file)
-            Write-GitHubError "Test result explicitly marked as Failed in file: $($file.Name)"
-            $totalErrors++
-        }
-
         if ($object.Executed -eq $false) {
             $unexecutedTests.Add($file)
             Write-GitHubError "Test was not executed as reported in file: $($file.Name)"
             $totalErrors++
+        } else {
+            if ($object.Result -eq 'Failed') {
+                $failedTests.Add($file)
+                Write-GitHubError "Test result explicitly marked as Failed in file: $($file.Name)"
+                $totalErrors++
+            }
+            $result | Format-Table | Out-String
+            $object | Format-Table | Out-String
         }
     }
 }
