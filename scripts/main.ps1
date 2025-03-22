@@ -15,6 +15,8 @@ LogGroup 'List files' {
 }
 
 $testResults = [System.Collections.Generic.List[psobject]]::new()
+$totalErrors = 0
+
 foreach ($file in $files) {
     $fileName = $file.BaseName
     $content = Get-Content -Path $file
@@ -29,14 +31,26 @@ foreach ($file in $files) {
         Inconclusive = [int]([math]::Round(($object | Measure-Object -Sum -Property InconclusiveCount).Sum))
         Skipped      = [int]([math]::Round(($object | Measure-Object -Sum -Property SkippedCount).Sum))
     }
-    $failed = ($result.Failed -gt 0) -or ($result.NotRun -gt 0) -or ($result.Inconclusive -gt 0)
+
+    $failed = ($result.Failed -gt 0) -or ($result.NotRun -gt 0) -or ($result.Inconclusive -gt 0) -or ($object.Result -eq 'Failed') -or ($object.Executed -eq $false)
     $color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
     $reset = $PSStyle.Reset
     $logGroupName = $fileName.Replace('-TestResult-Report', '')
     LogGroup " - $color$logGroupName$reset" {
         $result | Format-Table | Out-String
     }
+
+    if ($object.Result -eq 'Failed') {
+        Write-GitHubError "Test result explicitly marked as Failed in file: $($file.Name)"
+        $totalErrors++
+    }
+
+    if ($object.Executed -eq $false) {
+        Write-GitHubError "Test was not executed as reported in file: $($file.Name)"
+        $totalErrors++
+    }
 }
+
 Write-Output ('─' * 50)
 $total = [pscustomobject]@{
     Tests        = [int]([math]::Round(($testResults | Measure-Object -Sum -Property TotalCount).Sum))
@@ -46,27 +60,27 @@ $total = [pscustomobject]@{
     Inconclusive = [int]([math]::Round(($testResults | Measure-Object -Sum -Property InconclusiveCount).Sum))
     Skipped      = [int]([math]::Round(($testResults | Measure-Object -Sum -Property SkippedCount).Sum))
 }
-$failed = ($result.Failed -gt 0) -or ($result.NotRun -gt 0) -or ($result.Inconclusive -gt 0)
+
+$failed = ($total.Failed -gt 0) -or ($total.NotRun -gt 0) -or ($total.Inconclusive -gt 0)
 $color = $failed ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
 $reset = $PSStyle.Reset
 LogGroup " - $color`Summary$reset" {
     $total | Format-Table | Out-String
 }
 
-$totalErrors = 0
 if ($total.Failed -gt 0) {
     Write-GitHubError "There are $($total.Failed) failed tests of $($total.Tests) tests"
     $totalErrors += $total.Failed
 }
 
 if ($total.NotRun -gt 0) {
-    Write-GitHubError "There are $($total.NotRun) test not run of $($total.Tests) tests"
-    $totalErrors += $_.NotRun
+    Write-GitHubError "There are $($total.NotRun) tests not run of $($total.Tests) tests"
+    $totalErrors += $total.NotRun
 }
 
 if ($total.Inconclusive -gt 0) {
     Write-GitHubError "There are $($total.Inconclusive) inconclusive tests of $($total.Tests) tests"
-    $totalErrors += $_.Inconclusive
+    $totalErrors += $total.Inconclusive
 }
 
 exit $totalErrors
