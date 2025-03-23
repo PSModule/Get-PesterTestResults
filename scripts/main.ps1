@@ -27,6 +27,30 @@ LogGroup 'List files' {
     $files.Name | Out-String
 }
 
+# Validate that all expected artifact files are present.
+$expectedFiles = @()
+
+# Expected files from SourceCodeTestSuites: files prefixed with 'SourceCode-'
+foreach ($suite in $sourceCodeTestSuites) {
+    $expectedFiles += "SourceCode-$($suite.OSName)-TestResult-Report.json"
+}
+foreach ($suite in $psModuleTestSuites) {
+    $expectedFiles += "Module-$($suite.OSName)-TestResult-Report.json"
+}
+foreach ($suite in $moduleTestSuites) {
+    $expectedFiles += "$($suite.TestName)-$($suite.OSName)-TestResult-Report.json"
+}
+
+# Remove any duplicates if present.
+$expectedFiles = $expectedFiles | Select-Object -Unique
+
+# Check for missing files.
+$missingFiles = $expectedFiles | Where-Object { $files.Name -notcontains $_ }
+if ($missingFiles.Count -gt 0) {
+    Write-GitHubError "Missing expected test result files: $($missingFiles -join ', ')"
+    exit 1
+}
+
 $testResults = [System.Collections.Generic.List[psobject]]::new()
 $failedTests = [System.Collections.Generic.List[psobject]]::new()
 $unexecutedTests = [System.Collections.Generic.List[psobject]]::new()
