@@ -16,19 +16,8 @@ LogGroup 'List files' {
 }
 
 $sourceCodeTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites | ConvertFrom-Json
-LogGroup 'SourceCode test suites' {
-    $sourceCodeTestSuites | Format-Table | Out-String
-}
-
 $psModuleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites | ConvertFrom-Json
-LogGroup 'PSModule test suites' {
-    $psModuleTestSuites | Format-Table | Out-String
-}
-
 $moduleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_ModuleTestSuites | ConvertFrom-Json
-LogGroup 'Module test suites' {
-    $moduleTestSuites | Format-Table | Out-String
-}
 
 LogGroup 'Expected test suites' {
 
@@ -74,10 +63,9 @@ $unexecutedTests = [System.Collections.Generic.List[psobject]]::new()
 $totalErrors = 0
 
 foreach ($expected in $expectedTestSuites) {
-    $filePath = Join-Path $testResultsFolder.FullName $expected.FileName
-    if (Test-Path $filePath) {
-        $content = Get-Content -Path $filePath
-        $object = $content | ConvertFrom-Json
+    $file = $files | Where-Object { $_.Name -eq $expected.FileName }
+    if ($file) {
+        $object = $file | Get-Content | ConvertFrom-Json
         $result = [pscustomobject]@{
             Tests             = [int]([math]::Round(($object | Measure-Object -Sum -Property TotalCount).Sum))
             Passed            = [int]([math]::Round(($object | Measure-Object -Sum -Property PassedCount).Sum))
@@ -97,7 +85,6 @@ foreach ($expected in $expectedTestSuites) {
             Skipped           = $null
             ResultFilePresent = $false
         }
-        Write-GitHubError "Missing expected test result file: $($expected.FileName)"
         $totalErrors++
     }
 
