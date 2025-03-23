@@ -15,46 +15,55 @@ LogGroup 'List files' {
     $files.Name | Out-String
 }
 
+$sourceCodeTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites | ConvertFrom-Json
+LogGroup 'SourceCode test suites' {
+    $sourceCodeTestSuites | Format-Table | Out-String
+}
+
+$psModuleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites | ConvertFrom-Json
+LogGroup 'PSModule test suites' {
+    $psModuleTestSuites | Format-Table | Out-String
+}
+
+$moduleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_ModuleTestSuites | ConvertFrom-Json
+LogGroup 'Module test suites' {
+    $moduleTestSuites | Format-Table | Out-String
+}
+
 LogGroup 'Expected test suites' {
-    $sourceCodeTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites | ConvertFrom-Json
-    $psModuleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites | ConvertFrom-Json
-    $moduleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_ModuleTestSuites | ConvertFrom-Json
 
-# Build an array of expected test suite objects
-$expectedTestSuites = @()
+    # Build an array of expected test suite objects
+    $expectedTestSuites = @()
 
-# SourceCodeTestSuites: expected file names start with "SourceCode-"
-foreach ($suite in $sourceCodeTestSuites) {
-    $expectedTestSuites += [pscustomobject]@{
-        FileName = "SourceCode-$($suite.OSName)-TestResult-Report.json"
-        Category = 'SourceCode'
-        OSName   = $suite.OSName
-        TestName = $null
+    # SourceCodeTestSuites: expected file names start with "SourceCode-"
+    foreach ($suite in $sourceCodeTestSuites) {
+        $expectedTestSuites += [pscustomobject]@{
+            FileName = "SourceCode-$($suite.OSName)-TestResult-Report.json"
+            Category = 'SourceCode'
+            OSName   = $suite.OSName
+            TestName = $null
+        }
     }
-}
 
-# PSModuleTestSuites: expected file names start with "Module-"
-foreach ($suite in $psModuleTestSuites) {
-    $expectedTestSuites += [pscustomobject]@{
-        FileName = "Module-$($suite.OSName)-TestResult-Report.json"
-        Category = 'PSModuleTest'
-        OSName   = $suite.OSName
-        TestName = $null
+    # PSModuleTestSuites: expected file names start with "Module-"
+    foreach ($suite in $psModuleTestSuites) {
+        $expectedTestSuites += [pscustomobject]@{
+            FileName = "Module-$($suite.OSName)-TestResult-Report.json"
+            Category = 'PSModuleTest'
+            OSName   = $suite.OSName
+            TestName = $null
+        }
     }
-}
 
-# ModuleTestSuites: expected file names use the TestName as prefix
-foreach ($suite in $moduleTestSuites) {
-    $expectedTestSuites += [pscustomobject]@{
-        FileName = "$($suite.TestName)-$($suite.OSName)-TestResult-Report.json"
-        Category = 'ModuleTest'
-        OSName   = $suite.OSName
-        TestName = $suite.TestName
+    # ModuleTestSuites: expected file names use the TestName as prefix
+    foreach ($suite in $moduleTestSuites) {
+        $expectedTestSuites += [pscustomobject]@{
+            FileName = "$($suite.TestName)-$($suite.OSName)-TestResult-Report.json"
+            Category = 'ModuleTest'
+            OSName   = $suite.OSName
+            TestName = $suite.TestName
+        }
     }
-}
-
-# Remove duplicates if any
-$expectedTestSuites = $expectedTestSuites | Select-Object -Unique
 
     $expectedTestSuites | Format-Table | Out-String
 }
