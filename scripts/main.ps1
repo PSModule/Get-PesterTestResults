@@ -7,15 +7,17 @@ $PSStyle.OutputRendering = 'Ansi'
 $repo = $env:GITHUB_REPOSITORY
 $runId = $env:GITHUB_RUN_ID
 
-$sourceCodeTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites | ConvertFrom-Json
-$psModuleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites | ConvertFrom-Json
-$moduleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_ModuleTestSuites | ConvertFrom-Json
+LogGroup 'List test suites' {
+    $sourceCodeTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites | ConvertFrom-Json
+    $psModuleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites | ConvertFrom-Json
+    $moduleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_ModuleTestSuites | ConvertFrom-Json
 
-[pscustomobject]@{
-    SourceCodeTestSuites = $sourceCodeTestSuites
-    PSModuleTestSuites   = $psModuleTestSuites
-    ModuleTestSuites     = $moduleTestSuites
-} | Format-List | Out-String
+    [pscustomobject]@{
+        SourceCodeTestSuites = $sourceCodeTestSuites
+        PSModuleTestSuites   = $psModuleTestSuites
+        ModuleTestSuites     = $moduleTestSuites
+    } | Format-List | Out-String
+}
 
 $testResultsFolder = New-Item -Path . -ItemType Directory -Name 'TestResults' -Force
 gh run download $runId --repo $repo --pattern *-TestResults --dir TestResults
