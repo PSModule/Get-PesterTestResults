@@ -27,7 +27,7 @@ LogGroup 'Expected test suites' {
     # SourceCodeTestSuites: expected file names start with "SourceCode-"
     foreach ($suite in $sourceCodeTestSuites) {
         $expectedTestSuites += [pscustomobject]@{
-            FileName = "SourceCode-$($suite.OSName)-TestResult-Report.json"
+            Name     = "SourceCode-$($suite.OSName)-TestResult-Report"
             Category = 'SourceCode'
             OSName   = $suite.OSName
             TestName = $null
@@ -37,7 +37,7 @@ LogGroup 'Expected test suites' {
     # PSModuleTestSuites: expected file names start with "Module-"
     foreach ($suite in $psModuleTestSuites) {
         $expectedTestSuites += [pscustomobject]@{
-            FileName = "Module-$($suite.OSName)-TestResult-Report.json"
+            Name     = "Module-$($suite.OSName)-TestResult-Report"
             Category = 'PSModuleTest'
             OSName   = $suite.OSName
             TestName = $null
@@ -47,7 +47,7 @@ LogGroup 'Expected test suites' {
     # ModuleTestSuites: expected file names use the TestName as prefix
     foreach ($suite in $moduleTestSuites) {
         $expectedTestSuites += [pscustomobject]@{
-            FileName = "$($suite.TestName)-$($suite.OSName)-TestResult-Report.json"
+            Name     = "$($suite.TestName)-$($suite.OSName)-TestResult-Report"
             Category = 'ModuleTest'
             OSName   = $suite.OSName
             TestName = $suite.TestName
@@ -63,7 +63,7 @@ $unexecutedTests = [System.Collections.Generic.List[psobject]]::new()
 $totalErrors = 0
 
 foreach ($expected in $expectedTestSuites) {
-    $file = $files | Where-Object { $_.Name -eq $expected.FileName }
+    $file = $files | Where-Object { $_.BaseName -eq $expected.Name }
     if ($file) {
         $object = $file | Get-Content | ConvertFrom-Json
         $result = [pscustomobject]@{
@@ -95,24 +95,24 @@ foreach ($expected in $expectedTestSuites) {
                  ($result.Inconclusive -gt 0)
     $color = $isFailure ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
     $reset = $PSStyle.Reset
-    $logGroupName = $expected.FileName -replace '-TestResult-Report', ''
+    $logGroupName = $expected.Name -replace '-TestResult-Report.*', ''
 
     LogGroup " - $color$logGroupName$reset" {
         if ($result.ResultFilePresent) {
             # Output detailed results from the file.
             $object | Format-List | Out-String
             if ($object.Executed -eq $false) {
-                $unexecutedTests.Add($expected.FileName)
-                Write-GitHubError "Test was not executed as reported in file: $($expected.FileName)"
+                $unexecutedTests.Add($expected.Name)
+                Write-GitHubError "Test was not executed as reported in file: $($expected.Name)"
                 $totalErrors++
             } elseif ($object.Result -eq 'Failed') {
-                $failedTests.Add($expected.FileName)
-                Write-GitHubError "Test result explicitly marked as Failed in file: $($expected.FileName)"
+                $failedTests.Add($expected.Name)
+                Write-GitHubError "Test result explicitly marked as Failed in file: $($expected.Name)"
                 $totalErrors++
             }
             $result | Format-Table | Out-String
         } else {
-            Write-Host "Test result file not found for: $($expected.FileName)"
+            Write-Host "Test result file not found for: $($expected.Name)"
         }
     }
 
