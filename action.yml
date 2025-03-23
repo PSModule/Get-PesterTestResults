@@ -6,6 +6,15 @@ branding:
   color: white
 
 inputs:
+  SourceCodeTestSuites:
+    description: The test suites to run for the source code.
+    required: true
+  PSModuleTestSuites:
+    description: The test suites to run for the PSModule.
+    required: true
+  ModuleTestSuites:
+    description: The test suites to run for the module.
+    required: true
   Debug:
     description: Enable debug output.
     required: false
@@ -31,7 +40,12 @@ runs:
   steps:
     - name: Get-PesterTestResults
       uses: PSModule/GitHub-Script@v1
+      env:
+        PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites: ${{ inputs.SourceCodeTestSuites }}
+        PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites: ${{ inputs.PSModuleTestSuites }}
+        PSMODULE_GET_PESTERTESTRESULTS_INPUT_ModuleTestSuites: ${{ inputs.ModuleTestSuites }}
       with:
+        Name: Get-PesterTestResults
         Debug: ${{ inputs.Debug }}
         Prerelease: ${{ inputs.Prerelease }}
         Verbose: ${{ inputs.Verbose }}
@@ -39,5 +53,4 @@ runs:
         WorkingDirectory: ${{ inputs.WorkingDirectory }}
         ShowInfo: false
         Script: |
-          # Get-PesterTestResults
           ${{ github.action_path }}/scripts/main.ps1
