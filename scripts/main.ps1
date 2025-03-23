@@ -27,7 +27,13 @@ LogGroup 'Expected test suites' {
     # SourceCodeTestSuites: expected file names start with "SourceCode-"
     foreach ($suite in $sourceCodeTestSuites) {
         $expectedTestSuites += [pscustomobject]@{
-            Name     = "SourceCode-$($suite.OSName)-TestResult-Report"
+            Name     = "PSModuleTest-SourceCode-$($suite.OSName)-TestResult-Report"
+            Category = 'SourceCode'
+            OSName   = $suite.OSName
+            TestName = $null
+        }
+        $expectedTestSuites += [pscustomobject]@{
+            Name     = "PSModuleLint-SourceCode-$($suite.OSName)-TestResult-Report"
             Category = 'SourceCode'
             OSName   = $suite.OSName
             TestName = $null
@@ -37,7 +43,13 @@ LogGroup 'Expected test suites' {
     # PSModuleTestSuites: expected file names start with "Module-"
     foreach ($suite in $psModuleTestSuites) {
         $expectedTestSuites += [pscustomobject]@{
-            Name     = "Module-$($suite.OSName)-TestResult-Report"
+            Name     = "PSModuleTest-Module-$($suite.OSName)-TestResult-Report"
+            Category = 'PSModuleTest'
+            OSName   = $suite.OSName
+            TestName = $null
+        }
+        $expectedTestSuites += [pscustomobject]@{
+            Name     = "PSModuleLint-Module-$($suite.OSName)-TestResult-Report"
             Category = 'PSModuleTest'
             OSName   = $suite.OSName
             TestName = $null
