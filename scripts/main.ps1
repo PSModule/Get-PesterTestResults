@@ -15,9 +15,9 @@ LogGroup 'List files' {
     $files.Name | Out-String
 }
 
-$sourceCodeTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites | ConvertFrom-Json | Sort-Object Name
-$psModuleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites | ConvertFrom-Json | Sort-Object Name
-$moduleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_ModuleTestSuites | ConvertFrom-Json | Sort-Object Name
+$sourceCodeTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites | ConvertFrom-Json
+$psModuleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites | ConvertFrom-Json
+$moduleTestSuites = $env:PSMODULE_GET_PESTERTESTRESULTS_INPUT_ModuleTestSuites | ConvertFrom-Json
 
 LogGroup 'Expected test suites' {
 
@@ -66,6 +66,7 @@ LogGroup 'Expected test suites' {
         }
     }
 
+    $expectedTestSuites = $expectedTestSuites | Sort-Object Name
     $expectedTestSuites | Format-Table | Out-String
 }
 
@@ -76,56 +77,59 @@ $totalErrors = 0
 
 foreach ($expected in $expectedTestSuites) {
     $file = $files | Where-Object { $_.BaseName -eq $expected.Name }
-    if ($file) {
+    $result = if ($file) {
         $object = $file | Get-Content | ConvertFrom-Json
-        $result = [pscustomobject]@{
+        [pscustomobject]@{
+            Result            = $object.Result
+            Executed          = $object.Executed
+            ResultFilePresent = $true
             Tests             = [int]([math]::Round(($object | Measure-Object -Sum -Property TotalCount).Sum))
             Passed            = [int]([math]::Round(($object | Measure-Object -Sum -Property PassedCount).Sum))
             Failed            = [int]([math]::Round(($object | Measure-Object -Sum -Property FailedCount).Sum))
             NotRun            = [int]([math]::Round(($object | Measure-Object -Sum -Property NotRunCount).Sum))
             Inconclusive      = [int]([math]::Round(($object | Measure-Object -Sum -Property InconclusiveCount).Sum))
             Skipped           = [int]([math]::Round(($object | Measure-Object -Sum -Property SkippedCount).Sum))
-            ResultFilePresent = $true
         }
     } else {
-        $result = [pscustomobject]@{
+        [pscustomobject]@{
+            Result            = $null
+            Executed          = $null
+            ResultFilePresent = $false
             Tests             = $null
             Passed            = $null
             Failed            = $null
             NotRun            = $null
             Inconclusive      = $null
             Skipped           = $null
-            ResultFilePresent = $false
         }
-        $totalErrors++
     }
 
     # Determine if there’s any failure: missing file or non-successful test counts
-    $isFailure = ($result.ResultFilePresent -eq $false) -or
-                 ($result.Failed -gt 0) -or
-                 ($result.NotRun -gt 0) -or
-                 ($result.Inconclusive -gt 0)
+    $isFailure = (
+        $result.Result -ne 'Passed' -or
+        $result.Executed -ne $true -or
+        $result.ResultFilePresent -eq $false -or
+        $result.Tests -eq 0 -or
+        $result.Passed -eq 0 -or
+        $result.Failed -gt 0 -or
+        $result.NotRun -gt 0 -or
+        $result.Inconclusive -gt 0
+    )
     $color = $isFailure ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
     $reset = $PSStyle.Reset
     $logGroupName = $expected.Name -replace '-TestResult-Report.*', ''
 
     LogGroup " - $color$logGroupName$reset" {
-        if ($result.ResultFilePresent) {
-            # Output detailed results from the file.
-            $object | Format-List | Out-String
-            if ($object.Executed -eq $false) {
-                $unexecutedTests.Add($expected.Name)
-                Write-GitHubError "Test was not executed as reported in file: $($expected.Name)"
-                $totalErrors++
-            } elseif ($object.Result -eq 'Failed') {
-                $failedTests.Add($expected.Name)
-                Write-GitHubError "Test result explicitly marked as Failed in file: $($expected.Name)"
-                $totalErrors++
-            }
-            $result | Format-Table | Out-String
-        } else {
-            Write-Host "Test result file not found for: $($expected.Name)"
+        if ($object.Executed -eq $false) {
+            $unexecutedTests.Add($expected.Name)
+            Write-GitHubError "Test was not executed as reported in file: $($expected.Name)"
+            $totalErrors++
+        } elseif ($object.Result -eq 'Failed') {
+            $failedTests.Add($expected.Name)
+            Write-GitHubError "Test result explicitly marked as Failed in file: $($expected.Name)"
+            $totalErrors++
         }
+        $result | Format-Table | Out-String
     }
 
     if ($result.ResultFilePresent) {
