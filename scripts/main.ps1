@@ -66,7 +66,7 @@ LogGroup 'Expected test suites' {
         }
     }
 
-    $expectedTestSuites = $expectedTestSuites | Sort-Object Name
+    $expectedTestSuites = $expectedTestSuites | Sort-Object Category, Name
     $expectedTestSuites | Format-Table | Out-String
 }
 
