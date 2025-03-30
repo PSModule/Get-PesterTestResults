@@ -23,7 +23,8 @@ foreach ($artifact in $testResultArtifacts) {
         Write-Output "Downloading artifact [$($artifact.name)] to [$zipFile]"
         Invoke-WebRequest -Uri $url -OutFile $zipFile -Token ($context.Token) -Authentication Bearer
         Write-Output "Unzipping [$zipFile] to [$testResultsFolder]"
-        $zipFile | Expand-Archive -
+        Expand-Archive -Path $zipFile -DestinationPath $testResultsFolder.FullName -Force
+        Remove-Item -Path $zipFile -Force
     }
 }
 
