@@ -14,7 +14,7 @@ $artifacts = $response.Response.artifacts | Sort-Object -Property created_at -De
     $_.Group | Select-Object -First 1
 }
 $testResultArtifacts = $artifacts | Where-Object { $_.name -like '*-TestResults' }
-Write-Output "$($testResultArtifacts | Format-Table | Out-String)"
+Write-Output "$($testResultArtifacts | Select-Object -Property name, size_in_bytes, updated_at, archive_download_url | Format-Table | Out-String)"
 
 foreach ($artifact in $testResultArtifacts) {
     if ($artifact.name -like '*-TestResults') {
@@ -23,8 +23,7 @@ foreach ($artifact in $testResultArtifacts) {
         Write-Output "Downloading artifact [$($artifact.name)] to [$zipFile]"
         Invoke-WebRequest -Uri $url -OutFile $zipFile -Token ($context.Token) -Authentication Bearer
         Write-Output "Unzipping [$zipFile] to [$testResultsFolder]"
-        Expand-Archive -Path $zipFile -DestinationPath $testResultsFolder.FullName -Force
-        Remove-Item -Path $zipFile -Force
+        $zipFile | Expand-Archive -
     }
 }
 
