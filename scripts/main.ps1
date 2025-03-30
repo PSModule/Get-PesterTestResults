@@ -6,6 +6,7 @@ param()
 $PSStyle.OutputRendering = 'Ansi'
 $repo = $env:GITHUB_REPOSITORY
 $runId = $env:GITHUB_RUN_ID
+$context = Get-GitHubContext
 
 $testResultsFolder = New-Item -Path . -ItemType Directory -Name 'TestResults' -Force
 $response = Invoke-GitHubAPI -ApiEndpoint "/repos/$repo/actions/runs/$runId/artifacts"
@@ -20,9 +21,10 @@ foreach ($artifact in $testResultArtifacts) {
         $url = $artifact.archive_download_url
         $zipFile = Join-Path -Path $testResultsFolder.FullName -ChildPath "$($artifact.name).zip"
         Write-Output "Downloading artifact [$($artifact.name)] to [$zipFile]"
-        Invoke-WebRequest -Uri $url -OutFile $zipFile
+        Invoke-WebRequest -Uri $url -OutFile $zipFile -Token ($context.Token) -Authentication Bearer
         Write-Output "Unzipping [$zipFile] to [$testResultsFolder]"
         Expand-Archive -Path $zipFile -DestinationPath $testResultsFolder.FullName -Force
+        Remove-Item -Path $zipFile -Force
     }
 }
 
