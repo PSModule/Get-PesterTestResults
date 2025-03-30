@@ -8,7 +8,24 @@ $repo = $env:GITHUB_REPOSITORY
 $runId = $env:GITHUB_RUN_ID
 
 $testResultsFolder = New-Item -Path . -ItemType Directory -Name 'TestResults' -Force
-gh run download $runId --repo $repo --pattern *-TestResults --dir TestResults
+$response = Invoke-GitHubAPI -ApiEndpoint "/repos/$repo/actions/runs/$runId/artifacts"
+$artifacts = $response.Response.artifacts | Sort-Object -Property created_at -Descending | Group-Object -Property name | ForEach-Object {
+    $_.Group | Select-Object -First 1
+}
+$testResultArtifacts = $artifacts | Where-Object { $_.name -like '*-TestResults' }
+Write-Output "$($testResultArtifacts | Format-Table | Out-String)"
+
+foreach ($artifact in $testResultArtifacts) {
+    if ($artifact.name -like '*-TestResults') {
+        $url = $artifact.archive_download_url
+        $zipFile = Join-Path -Path $testResultsFolder.FullName -ChildPath "$($artifact.name).zip"
+        Write-Output "Downloading artifact [$($artifact.name)] to [$zipFile]"
+        Invoke-WebRequest -Uri $url -OutFile $zipFile
+        Write-Output "Unzipping [$zipFile] to [$testResultsFolder]"
+        Expand-Archive -Path $zipFile -DestinationPath $testResultsFolder.FullName -Force
+    }
+}
+
 $files = Get-ChildItem -Path $testResultsFolder -Recurse -File -Filter *.json | Sort-Object Name
 
 LogGroup 'List files' {
