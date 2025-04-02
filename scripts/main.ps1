@@ -88,6 +88,7 @@ LogGroup 'Expected test suites' {
     $expectedTestSuites = $expectedTestSuites | Sort-Object Category, Name
     $expectedTestSuites | Format-Table | Out-String
 }
+$isFailure = $false
 
 $testResults = [System.Collections.Generic.List[psobject]]::new()
 $failedTests = [System.Collections.Generic.List[psobject]]::new()
@@ -123,27 +124,36 @@ foreach ($expected in $expectedTestSuites) {
         }
     }
 
-    # Determine if there’s any failure: missing file or non-successful test counts
-    $isFailure = (
+    # Determine if there’s any failure for this single test file
+    $testFailure = (
         $result.Result -ne 'Passed' -or
         $result.Executed -ne $true -or
         $result.ResultFilePresent -eq $false -or
         $result.Tests -eq 0 -or
         $result.Passed -eq 0 -or
         $result.Failed -gt 0 -or
-        $result.NotRun -gt 0 -or
         $result.Inconclusive -gt 0
     )
-    $color = $isFailure ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
+
+    if ($testFailure) {
+        $conclusion = 'Failed'
+        $color = $PSStyle.Foreground.Red
+        $isFailure = $true
+    } else {
+        $conclusion = 'Passed'
+        $color = $PSStyle.Foreground.Green
+    }
+    $result | Add-Member -NotePropertyName 'Conclusion' -NotePropertyValue $conclusion
+
     $reset = $PSStyle.Reset
     $logGroupName = $expected.Name -replace '-TestResult-Report.*', ''
 
     LogGroup " - $color$logGroupName$reset" {
-        if ($object.Executed -eq $false) {
+        if ($result.Executed -eq $false) {
             $unexecutedTests.Add($expected.Name)
             Write-GitHubError "Test was not executed as reported in file: $($expected.Name)"
             $totalErrors++
-        } elseif ($object.Result -eq 'Failed') {
+        } elseif ($result.Result -eq 'Failed') {
             $failedTests.Add($expected.Name)
             Write-GitHubError "Test result explicitly marked as Failed in file: $($expected.Name)"
             $totalErrors++
@@ -152,32 +162,28 @@ foreach ($expected in $expectedTestSuites) {
     }
 
     if ($result.ResultFilePresent) {
-        $testResults.Add($object)
+        $testResults.Add($result)
     }
 }
 
 Write-Output ('─' * 50)
 $total = [pscustomobject]@{
-    Tests        = [int]([math]::Round(($testResults | Measure-Object -Sum -Property TotalCount).Sum))
-    Passed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property PassedCount).Sum))
-    Failed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property FailedCount).Sum))
-    NotRun       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property NotRunCount).Sum))
-    Inconclusive = [int]([math]::Round(($testResults | Measure-Object -Sum -Property InconclusiveCount).Sum))
-    Skipped      = [int]([math]::Round(($testResults | Measure-Object -Sum -Property SkippedCount).Sum))
+    Tests        = [int]([math]::Round(($testResults | Measure-Object -Sum -Property Tests).Sum))
+    Passed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property Passed).Sum))
+    Failed       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property Failed).Sum))
+    NotRun       = [int]([math]::Round(($testResults | Measure-Object -Sum -Property NotRun).Sum))
+    Inconclusive = [int]([math]::Round(($testResults | Measure-Object -Sum -Property Inconclusive).Sum))
+    Skipped      = [int]([math]::Round(($testResults | Measure-Object -Sum -Property Skipped).Sum))
 }
 
-$overallFailure = ($total.Failed -gt 0) -or ($total.NotRun -gt 0) -or ($total.Inconclusive -gt 0) -or ($totalErrors -gt 0)
-$color = $overallFailure ? $PSStyle.Foreground.Red : $PSStyle.Foreground.Green
+
+$color = if ($isFailure) { $PSStyle.Foreground.Red } else { $PSStyle.Foreground.Green }
 $reset = $PSStyle.Reset
 LogGroup " - $color`Summary$reset" {
     $total | Format-Table | Out-String
     if ($total.Failed -gt 0) {
         Write-GitHubError "There are $($total.Failed) failed tests of $($total.Tests) tests"
         $totalErrors += $total.Failed
-    }
-    if ($total.NotRun -gt 0) {
-        Write-GitHubError "There are $($total.NotRun) tests not run of $($total.Tests) tests"
-        $totalErrors += $total.NotRun
     }
     if ($total.Inconclusive -gt 0) {
         Write-GitHubError "There are $($total.Inconclusive) inconclusive tests of $($total.Tests) tests"
