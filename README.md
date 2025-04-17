@@ -1,4 +1,4 @@
-# Get-PesterTestResults Action
+# Get-PesterTestResults
 
 A GitHub Action that gathers Pester test results for the PSModule process by analyzing test artifacts from the workflow run.
 It validates test execution and results, providing a summary and failing if any tests are unsuccessful.
