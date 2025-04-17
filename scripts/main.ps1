@@ -3,12 +3,11 @@
 [CmdletBinding()]
 param()
 
-$PSStyle.OutputRendering = 'Ansi'
 $owner = $env:GITHUB_REPOSITORY_OWNER
 $repo = $env:GITHUB_REPOSITORY_NAME
 $runId = $env:GITHUB_RUN_ID
 
-$files = Get-GitHubArtifact -Owner $owner -Repository $repo -WorkflowRunId $runId -Name '*-TestResults' |
+$files = Get-GitHubArtifact -Owner $owner -Repository $repo -WorkflowRunID $runId -Name '*-TestResults' |
     Save-GitHubArtifact -Path 'TestResults' -Expand -PassThru | Get-ChildItem -Recurse -Filter *.json | Sort-Object Name
 
 LogGroup 'List files' {
