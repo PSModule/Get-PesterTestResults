@@ -9,7 +9,7 @@ $repo = $env:GITHUB_REPOSITORY_NAME
 $runId = $env:GITHUB_RUN_ID
 
 $files = Get-GitHubArtifact -Owner $owner -Repository $repo -ID $runId -Name '*-TestResults' |
-    Save-GitHubArtifact -Path 'TestResults' -Expand -Cleanup | Where-Object { $_.Name -like '*.json' } | Sort-Object Name
+    Save-GitHubArtifact -Path 'TestResults' -Expand | Where-Object { $_.Name -like '*.json' } | Sort-Object Name
 
 LogGroup 'List files' {
     $files.Name | Out-String
