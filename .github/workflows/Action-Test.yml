@@ -25,7 +25,50 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # Upload artifact from tests:
+      - name: Upload artifact [PATH-Windows-TestResults]
+        uses: actions/upload-artifact@v4
+        with:
+          name: PATH-Windows-TestResults
+          path: ./tests/TestResults/PATH-Windows-TestResults
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload artifact [PSModuleLint-Module-Windows-TestResults]
+        uses: actions/upload-artifact@v4
+        with:
+          name: PSModuleLint-Module-Windows-TestResults
+          path: ./tests/TestResults/PSModuleLint-Module-Windows-TestResults
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload artifact [PSModuleLint-SourceCode-Windows-TestResults]
+        uses: actions/upload-artifact@v4
+        with:
+          name: PSModuleLint-SourceCode-Windows-TestResults
+          path: ./tests/TestResults/PSModuleLint-SourceCode-Windows-TestResults
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload artifact [PSModuleTest-Module-Windows-TestResults]
+        uses: actions/upload-artifact@v4
+        with:
+          name: PSModuleTest-Module-Windows-TestResults
+          path: ./tests/TestResults/PSModuleTest-Module-Windows-TestResults
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload artifact [PSModuleTest-SourceCode-Windows-TestResults]
+        uses: actions/upload-artifact@v4
+        with:
+          name: PSModuleTest-SourceCode-Windows-TestResults
+          path: ./tests/TestResults/PSModuleTest-SourceCode-Windows-TestResults
+          retention-days: 1
+          if-no-files-found: error
+
       - name: Action-Test
         uses: ./
         with:
-          WorkingDirectory: ./tests
+          SourceCodeTestSuites: '[{"OSName": "Windows"}'
+          PSModuleTestSuites: '[{"OSName": "Windows"}]'
+          ModuleTestSuites: '[{"TestName": "PATH", "OSName": "Windows"}]'
