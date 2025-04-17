@@ -44,7 +44,6 @@ This action does not define explicit outputs. Instead:
     SourceCodeTestSuites: '[{"OSName": "Windows"}, {"OSName": "Linux"}]'
     PSModuleTestSuites: '[{"OSName": "Windows"}]'
     ModuleTestSuites: '[{"TestName": "Integration", "OSName": "Windows"}]'
-    WorkingDirectory: './tests'
 ```
 
 ### Notes
