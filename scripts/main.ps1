@@ -1,5 +1,9 @@
-#Requires -Modules GitHub
+﻿#Requires -Modules GitHub
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingWriteHost', '',
+    Justification = 'Outputs to GitHub Actions logs.'
+)]
 [CmdletBinding()]
 param()
 
