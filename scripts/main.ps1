@@ -8,7 +8,7 @@ $repo = $env:GITHUB_REPOSITORY_NAME
 $runId = $env:GITHUB_RUN_ID
 
 $files = Get-GitHubArtifact -Owner $owner -Repository $repo -WorkflowRunID $runId -Name '*-TestResults' |
-    Save-GitHubArtifact -Path 'TestResults' -Expand -PassThru | Get-ChildItem -Recurse -Filter *.json | Sort-Object Name
+    Save-GitHubArtifact -Path 'TestResults' -Force -Expand -PassThru | Get-ChildItem -Recurse -Filter *.json | Sort-Object Name -Unique
 
 LogGroup 'List files' {
     $files.Name | Out-String
