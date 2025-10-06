@@ -188,7 +188,7 @@ foreach ($expected in $expectedTestSuites) {
             $totalErrors++
         }
 
-        $result | Format-Table | Out-String
+        Write-Host "$($result | Format-Table | Out-String)"
     }
 
     if ($result.ResultFilePresent) {
