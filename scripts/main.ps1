@@ -75,8 +75,9 @@ LogGroup 'Expected test suites' {
 $isFailure = $false
 
 $testResults = [System.Collections.Generic.List[psobject]]::new()
-$failedTests = [System.Collections.Generic.List[psobject]]::new()
-$unexecutedTests = [System.Collections.Generic.List[psobject]]::new()
+$failedTests = [System.Collections.Generic.List[string]]::new()
+$unexecutedTests = [System.Collections.Generic.List[string]]::new()
+$missingResultFiles = [System.Collections.Generic.List[string]]::new()
 $totalErrors = 0
 
 foreach ($expected in $expectedTestSuites) {
@@ -109,14 +110,21 @@ foreach ($expected in $expectedTestSuites) {
     }
 
     # Determine if there’s any failure for this single test file
+    $hasTestsValue = $null -ne $result.Tests
+    $hasPassedValue = $null -ne $result.Passed
+    $hasFailedValue = $null -ne $result.Failed
+    $hasInconclusiveValue = $null -ne $result.Inconclusive
+    $hasNotRunValue = $null -ne $result.NotRun
+
     $testFailure = (
         $result.Result -ne 'Passed' -or
         $result.Executed -ne $true -or
         $result.ResultFilePresent -eq $false -or
-        $result.Tests -eq 0 -or
-        $result.Passed -eq 0 -or
-        $result.Failed -gt 0 -or
-        $result.Inconclusive -gt 0
+        ($hasTestsValue -and $result.Tests -eq 0) -or
+        ($hasPassedValue -and $hasTestsValue -and $result.Tests -gt 0 -and $result.Passed -eq 0) -or
+        ($hasFailedValue -and $result.Failed -gt 0) -or
+        ($hasInconclusiveValue -and $result.Inconclusive -gt 0) -or
+        ($hasNotRunValue -and $result.NotRun -gt 0)
     )
 
     if ($testFailure) {
@@ -133,16 +141,54 @@ foreach ($expected in $expectedTestSuites) {
     $logGroupName = $expected.Name -replace '-TestResult-Report.*', ''
 
     LogGroup " - $color$logGroupName$reset" {
+        $failureReasons = [System.Collections.Generic.List[string]]::new()
+
+        if ($result.ResultFilePresent -eq $false) {
+            $missingResultFiles.Add($expected.Name)
+            $null = $failureReasons.Add("Result file '$($expected.Name)' was not found in the artifacts.")
+        }
+
         if ($result.Executed -eq $false) {
             $unexecutedTests.Add($expected.Name)
-            Write-GitHubError "Test was not executed as reported in file: $($expected.Name)"
-            $totalErrors++
-        } elseif ($result.Result -eq 'Failed') {
-            $failedTests.Add($expected.Name)
-            Write-GitHubError "Test result explicitly marked as Failed in file: $($expected.Name)"
+            $null = $failureReasons.Add("Test execution flag is false in file: $($expected.Name)")
+        }
+
+        if ($result.Result -and $result.Result -ne 'Passed') {
+            if ($failedTests -notcontains $expected.Name) {
+                $failedTests.Add($expected.Name)
+            }
+            $null = $failureReasons.Add("Test result value '$($result.Result)' indicates failure in file: $($expected.Name)")
+        }
+
+        if ($hasTestsValue -and $result.Tests -eq 0) {
+            $null = $failureReasons.Add("No tests were reported in file: $($expected.Name)")
+        }
+
+        if ($hasPassedValue -and $hasTestsValue -and $result.Tests -gt 0 -and $result.Passed -eq 0) {
+            $null = $failureReasons.Add("No tests passed according to file: $($expected.Name)")
+        }
+
+        if ($hasFailedValue -and $result.Failed -gt 0) {
+            if ($failedTests -notcontains $expected.Name) {
+                $failedTests.Add($expected.Name)
+            }
+            $null = $failureReasons.Add("$($result.Failed) tests failed in file: $($expected.Name)")
+        }
+
+        if ($hasInconclusiveValue -and $result.Inconclusive -gt 0) {
+            $null = $failureReasons.Add("$($result.Inconclusive) tests were inconclusive in file: $($expected.Name)")
+        }
+
+        if ($hasNotRunValue -and $result.NotRun -gt 0) {
+            $null = $failureReasons.Add("$($result.NotRun) tests were not run in file: $($expected.Name)")
+        }
+
+        foreach ($reason in $failureReasons) {
+            Write-GitHubError $reason
             $totalErrors++
         }
-        $result | Format-Table | Out-String
+
+        Write-Host "$($result | Format-Table | Out-String)"
     }
 
     if ($result.ResultFilePresent) {
@@ -180,6 +226,10 @@ LogGroup " - $color`Summary$reset" {
     if ($unexecutedTests.Count -gt 0) {
         Write-Host 'Unexecuted Test Files'
         $unexecutedTests | ForEach-Object { Write-Host " - $_" }
+    }
+    if ($missingResultFiles.Count -gt 0) {
+        Write-Host 'Missing Test Result Files'
+        $missingResultFiles | ForEach-Object { Write-Host " - $_" }
     }
 }
 
