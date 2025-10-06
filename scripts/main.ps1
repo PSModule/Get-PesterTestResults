@@ -145,42 +145,42 @@ foreach ($expected in $expectedTestSuites) {
 
         if ($result.ResultFilePresent -eq $false) {
             $missingResultFiles.Add($expected.Name)
-            $failureReasons.Add("Result file '$($expected.Name)' was not found in the artifacts.") | Out-Null
+            $null = $failureReasons.Add("Result file '$($expected.Name)' was not found in the artifacts.")
         }
 
         if ($result.Executed -eq $false) {
             $unexecutedTests.Add($expected.Name)
-            $failureReasons.Add("Test execution flag is false in file: $($expected.Name)") | Out-Null
+            $null = $failureReasons.Add("Test execution flag is false in file: $($expected.Name)")
         }
 
         if ($result.Result -and $result.Result -ne 'Passed') {
             if ($failedTests -notcontains $expected.Name) {
                 $failedTests.Add($expected.Name)
             }
-            $failureReasons.Add("Test result value '$($result.Result)' indicates failure in file: $($expected.Name)") | Out-Null
+            $null = $failureReasons.Add("Test result value '$($result.Result)' indicates failure in file: $($expected.Name)")
         }
 
         if ($hasTestsValue -and $result.Tests -eq 0) {
-            $failureReasons.Add("No tests were reported in file: $($expected.Name)") | Out-Null
+            $null = $failureReasons.Add("No tests were reported in file: $($expected.Name)")
         }
 
         if ($hasPassedValue -and $hasTestsValue -and $result.Tests -gt 0 -and $result.Passed -eq 0) {
-            $failureReasons.Add("No tests passed according to file: $($expected.Name)") | Out-Null
+            $null = $failureReasons.Add("No tests passed according to file: $($expected.Name)")
         }
 
         if ($hasFailedValue -and $result.Failed -gt 0) {
             if ($failedTests -notcontains $expected.Name) {
                 $failedTests.Add($expected.Name)
             }
-            $failureReasons.Add("$($result.Failed) tests failed in file: $($expected.Name)") | Out-Null
+            $null = $failureReasons.Add("$($result.Failed) tests failed in file: $($expected.Name)")
         }
 
         if ($hasInconclusiveValue -and $result.Inconclusive -gt 0) {
-            $failureReasons.Add("$($result.Inconclusive) tests were inconclusive in file: $($expected.Name)") | Out-Null
+            $null = $failureReasons.Add("$($result.Inconclusive) tests were inconclusive in file: $($expected.Name)")
         }
 
         if ($hasNotRunValue -and $result.NotRun -gt 0) {
-            $failureReasons.Add("$($result.NotRun) tests were not run in file: $($expected.Name)") | Out-Null
+            $null = $failureReasons.Add("$($result.NotRun) tests were not run in file: $($expected.Name)")
         }
 
         foreach ($reason in $failureReasons) {
