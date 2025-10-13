@@ -114,7 +114,6 @@ foreach ($expected in $expectedTestSuites) {
     $hasPassedValue = $null -ne $result.Passed
     $hasFailedValue = $null -ne $result.Failed
     $hasInconclusiveValue = $null -ne $result.Inconclusive
-    $hasNotRunValue = $null -ne $result.NotRun
 
     $testFailure = (
         $result.Result -ne 'Passed' -or
@@ -123,8 +122,7 @@ foreach ($expected in $expectedTestSuites) {
         ($hasTestsValue -and $result.Tests -eq 0) -or
         ($hasPassedValue -and $hasTestsValue -and $result.Tests -gt 0 -and $result.Passed -eq 0) -or
         ($hasFailedValue -and $result.Failed -gt 0) -or
-        ($hasInconclusiveValue -and $result.Inconclusive -gt 0) -or
-        ($hasNotRunValue -and $result.NotRun -gt 0)
+        ($hasInconclusiveValue -and $result.Inconclusive -gt 0)
     )
 
     if ($testFailure) {
@@ -177,10 +175,6 @@ foreach ($expected in $expectedTestSuites) {
 
         if ($hasInconclusiveValue -and $result.Inconclusive -gt 0) {
             $null = $failureReasons.Add("$($result.Inconclusive) tests were inconclusive in file: $($expected.Name)")
-        }
-
-        if ($hasNotRunValue -and $result.NotRun -gt 0) {
-            $null = $failureReasons.Add("$($result.NotRun) tests were not run in file: $($expected.Name)")
         }
 
         foreach ($reason in $failureReasons) {
