@@ -39,7 +39,7 @@ runs:
   using: composite
   steps:
     - name: Get-PesterTestResults
-      uses: PSModule/GitHub-Script@v1
+      uses: PSModule/GitHub-Script@2010983167dc7a41bcd84cb88e698ec18eccb7ca # v1.7.8
       env:
         PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites: ${{ inputs.SourceCodeTestSuites }}
         PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites: ${{ inputs.PSModuleTestSuites }}
