@@ -1,5 +1,5 @@
 name: Get-PesterTestResults
-description: A GitHub Action that is used to gather testreulst for the PSModule process.
+description: A GitHub Action that is used to gather test results for the PSModule process.
 author: PSModule
 branding:
   icon: upload-cloud
@@ -39,7 +39,7 @@ runs:
   using: composite
   steps:
     - name: Get-PesterTestResults
-      uses: PSModule/GitHub-Script@v1
+      uses: PSModule/GitHub-Script@0097f3bbe3f413f3b577b9bcc600727b0ca3201a # v1.7.10
       env:
         PSMODULE_GET_PESTERTESTRESULTS_INPUT_SourceCodeTestSuites: ${{ inputs.SourceCodeTestSuites }}
         PSMODULE_GET_PESTERTESTRESULTS_INPUT_PSModuleTestSuites: ${{ inputs.PSModuleTestSuites }}
@@ -53,4 +53,4 @@ runs:
         WorkingDirectory: ${{ inputs.WorkingDirectory }}
         ShowInfo: false
         Script: |
-          ${{ github.action_path }}/scripts/main.ps1
+          ${{ github.action_path }}/src/main.ps1
