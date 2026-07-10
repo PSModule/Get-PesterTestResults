@@ -20,7 +20,7 @@ or missing results. It supports three categories of test suites: Source Code, PS
 | `ModuleTestSuites`      | JSON array specifying TestName and OSName for Module test suites. Example: `[{"TestName": "Integration", "OSName": "MacOS"}]` | Yes      |           |
 | `Debug`                 | Enable debug output (`true`/`false`).                                                                                         | No       | `false`   |
 | `Verbose`               | Enable verbose output (`true`/`false`).                                                                                       | No       | `false`   |
-| `Version`               | Exact version of the GitHub module to install (e.g., `1.0.0`).                                                                | No       | Latest    |
+| `Version`               | Version of the GitHub module to install; accepts an exact version or a NuGet version range (for example `[1.2.0, 2.0.0)`).                                                                | No       | Latest    |
 | `Prerelease`            | Allow installing prerelease module versions (`true`/`false`).                                                                 | No       | `false`   |
 | `WorkingDirectory`      | Working directory for the script.                                                                                             | No       | `.`       |
 
